@@ -7,6 +7,7 @@ from src.charts import (
     create_delinquency_chart,
     create_npa_by_region_chart,
 )
+from src.filters import apply_filters
 
 
 st.set_page_config(
@@ -18,7 +19,36 @@ st.title("Nepal Banking Risk Analytics Dashboard")
 st.write("Credit risk overview of the synthetic Nepal loan portfolio.")
 
 loans_df = load_loans_data()
-kpis = calculate_portfolio_kpis(loans_df)
+
+st.sidebar.header("Portfolio Filters")
+
+region_options = sorted(loans_df["region"].dropna().unique().tolist())
+product_options = sorted(loans_df["product_type"].dropna().unique().tolist())
+status_options = sorted(loans_df["status"].dropna().unique().tolist())
+
+selected_regions = st.sidebar.multiselect(
+    "Select Region",
+    options=region_options,
+)
+
+selected_products = st.sidebar.multiselect(
+    "Select Product Type",
+    options=product_options,
+)
+
+selected_statuses = st.sidebar.multiselect(
+    "Select Loan Status",
+    options=status_options,
+)
+
+filtered_loans_df = apply_filters(
+    loans_df,
+    selected_regions,
+    selected_products,
+    selected_statuses,
+)
+
+kpis = calculate_portfolio_kpis(filtered_loans_df)
 
 st.subheader("Portfolio Overview")
 
@@ -54,9 +84,9 @@ with col8:
 
 st.subheader("Portfolio Charts")
 
-fig_product = create_loan_product_chart(loans_df)
-fig_delinquency = create_delinquency_chart(loans_df)
-fig_npa_region = create_npa_by_region_chart(loans_df)
+fig_product = create_loan_product_chart(filtered_loans_df)
+fig_delinquency = create_delinquency_chart(filtered_loans_df)
+fig_npa_region = create_npa_by_region_chart(filtered_loans_df)
 
 chart_col1, chart_col2 = st.columns(2)
 
@@ -67,3 +97,6 @@ with chart_col2:
     st.plotly_chart(fig_delinquency, use_container_width=True)
 
 st.plotly_chart(fig_npa_region, use_container_width=True)
+
+st.subheader("Filtered Loan Records")
+st.dataframe(filtered_loans_df.head(20))
