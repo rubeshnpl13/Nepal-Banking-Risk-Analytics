@@ -12,7 +12,7 @@ from src.charts import (
 )
 from src.filters import apply_filters
 from src.portfolio_analysis import create_product_risk_summary
-
+from src.export_utils import convert_df_to_csv
 
 st.set_page_config(
     page_title="Nepal Banking Risk Analytics Dashboard",
@@ -41,6 +41,22 @@ filtered_loans_df = apply_filters(
     selected_statuses,
 )
 
+csv_data = convert_df_to_csv(filtered_loans_df)
+
+st.sidebar.write(f"Filtered records: {len(filtered_loans_df):,}")
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("Export Data")
+
+st.sidebar.download_button(
+    label="Download Filtered Loans CSV",
+    data=csv_data,
+    file_name="filtered_loans_data.csv",
+    mime="text/csv",
+)
+
+
+#csv_data = convert_df_to_csv(filtered_loans_df)
 kpis = calculate_portfolio_kpis(filtered_loans_df)
 
 st.subheader("Portfolio Overview")
