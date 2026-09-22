@@ -97,3 +97,52 @@ def create_loan_origination_trend_chart(loans_df):
     )
 
     return fig
+
+def create_pd_lgd_scatter_chart(loans_df):
+    fig = px.scatter(
+        loans_df,
+        x="pd",
+        y="lgd",
+        size="ead",
+        color="product_type",
+        hover_data=["loan_id", "region", "status"],
+        title="PD vs LGD Risk Scatter",
+        size_max=30,
+    )
+
+    fig.update_layout(
+        xaxis_title="Probability of Default (PD)",
+        yaxis_title="Loss Given Default (LGD)",
+    )
+
+    return fig
+
+
+def create_vintage_npa_chart(loans_df):
+    vintage_df = (
+        loans_df.groupby("vintage", as_index=False)
+        .agg(
+            total_loans=("loan_id", "count"),
+            npa_ratio=("npa_flag", "mean"),
+            default_rate=("defaulted_flag", "mean"),
+        )
+        .sort_values("vintage")
+    )
+
+    vintage_df["npa_ratio_pct"] = vintage_df["npa_ratio"] * 100
+    vintage_df["default_rate_pct"] = vintage_df["default_rate"] * 100
+
+    fig = px.line(
+        vintage_df,
+        x="vintage",
+        y="npa_ratio_pct",
+        markers=True,
+        title="Vintage Analysis: NPA Ratio by Origination Cohort",
+    )
+
+    fig.update_layout(
+        xaxis_title="Vintage",
+        yaxis_title="NPA Ratio (%)",
+    )
+
+    return fig

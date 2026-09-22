@@ -7,6 +7,8 @@ from src.charts import (
     create_delinquency_chart,
     create_npa_by_region_chart,
     create_loan_origination_trend_chart,
+    create_pd_lgd_scatter_chart,
+    create_vintage_npa_chart,
 )
 from src.filters import apply_filters
 from src.portfolio_analysis import create_product_risk_summary
@@ -78,21 +80,34 @@ tab1, tab2 = st.tabs(["Dashboard Charts", "Portfolio Details"])
 with tab1:
     st.subheader("Portfolio Charts")
 
-    fig_product = create_loan_product_chart(filtered_loans_df)
-    fig_delinquency = create_delinquency_chart(filtered_loans_df)
-    fig_npa_region = create_npa_by_region_chart(filtered_loans_df)
-    fig_trend = create_loan_origination_trend_chart(filtered_loans_df)
+    if filtered_loans_df.empty:
+        st.warning("No data available for the selected filters.")
+    else:
+        fig_product = create_loan_product_chart(filtered_loans_df)
+        fig_delinquency = create_delinquency_chart(filtered_loans_df)
+        fig_npa_region = create_npa_by_region_chart(filtered_loans_df)
+        fig_trend = create_loan_origination_trend_chart(filtered_loans_df)
+        fig_pd_lgd = create_pd_lgd_scatter_chart(filtered_loans_df)
+        fig_vintage = create_vintage_npa_chart(filtered_loans_df)
 
-    chart_col1, chart_col2 = st.columns(2)
+        chart_col1, chart_col2 = st.columns(2)
 
-    with chart_col1:
-        st.plotly_chart(fig_product, use_container_width=True)
+        with chart_col1:
+            st.plotly_chart(fig_product, use_container_width=True)
 
-    with chart_col2:
-        st.plotly_chart(fig_delinquency, use_container_width=True)
+        with chart_col2:
+            st.plotly_chart(fig_delinquency, use_container_width=True)
 
-    st.plotly_chart(fig_npa_region, use_container_width=True)
-    st.plotly_chart(fig_trend, use_container_width=True)
+        st.plotly_chart(fig_npa_region, use_container_width=True)
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+        risk_col1, risk_col2 = st.columns(2)
+
+        with risk_col1:
+            st.plotly_chart(fig_pd_lgd, use_container_width=True)
+
+        with risk_col2:
+            st.plotly_chart(fig_vintage, use_container_width=True)
 
 with tab2:
     st.subheader("Risk Segmentation by Product")
