@@ -1,0 +1,8 @@
+metric,value
+borrowers,1800.0
+loans,2600.0
+default_rate,0.0531
+npa_rate,0.1531
+avg_loan_amount_npr,430191.89
+avg_pd,0.2762
+avg_lgd,0.4343
