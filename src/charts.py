@@ -146,3 +146,86 @@ def create_vintage_npa_chart(loans_df):
     )
 
     return fig
+
+def create_income_distribution_chart(borrowers_df):
+    fig = px.histogram(
+        borrowers_df,
+        x="monthly_income_npr",
+        nbins=30,
+        title="Borrower Income Distribution",
+    )
+
+    fig.update_layout(
+        xaxis_title="Monthly Income (NPR)",
+        yaxis_title="Number of Borrowers",
+    )
+
+    return fig
+
+
+def create_credit_score_distribution_chart(borrowers_df):
+    fig = px.histogram(
+        borrowers_df,
+        x="credit_score",
+        nbins=30,
+        title="Credit Score Distribution",
+    )
+
+    fig.update_layout(
+        xaxis_title="Credit Score",
+        yaxis_title="Number of Borrowers",
+    )
+
+    return fig
+
+
+def create_employment_type_chart(borrowers_df):
+    employment_df = (
+        borrowers_df["employment_type"]
+        .value_counts()
+        .reset_index()
+    )
+    employment_df.columns = ["employment_type", "count"]
+
+    fig = px.bar(
+        employment_df,
+        x="employment_type",
+        y="count",
+        color="employment_type",
+        title="Borrowers by Employment Type",
+        text="count",
+    )
+
+    fig.update_layout(
+        xaxis_title="Employment Type",
+        yaxis_title="Number of Borrowers",
+        showlegend=False,
+    )
+
+    return fig
+
+
+def create_region_borrower_chart(borrowers_df):
+    region_df = (
+        borrowers_df["region"]
+        .value_counts()
+        .reset_index()
+    )
+    region_df.columns = ["region", "count"]
+
+    fig = px.bar(
+        region_df,
+        x="region",
+        y="count",
+        color="region",
+        title="Borrowers by Region",
+        text="count",
+    )
+
+    fig.update_layout(
+        xaxis_title="Region",
+        yaxis_title="Number of Borrowers",
+        showlegend=False,
+    )
+
+    return fig
