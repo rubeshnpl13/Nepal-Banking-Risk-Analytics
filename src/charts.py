@@ -75,3 +75,25 @@ def create_npa_by_region_chart(loans_df):
     )
 
     return fig
+
+def create_loan_origination_trend_chart(loans_df):
+    trend_df = (
+        loans_df.groupby("origination_date", as_index=False)
+        .size()
+    )
+    trend_df.columns = ["origination_date", "loan_count"]
+
+    fig = px.line(
+        trend_df,
+        x="origination_date",
+        y="loan_count",
+        title="Loan Originations Over Time",
+        markers=True,
+    )
+
+    fig.update_layout(
+        xaxis_title="Origination Date",
+        yaxis_title="Number of Loans",
+    )
+
+    return fig

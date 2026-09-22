@@ -8,7 +8,10 @@ SUMMARY_PATH = "datasets/dataset_summary.csv"
 
 
 def load_loans_data():
-    return pd.read_csv(LOANS_PATH)
+    df = pd.read_csv(LOANS_PATH)
+    df["origination_date"] = pd.to_datetime(df["origination_date"])
+    df["maturity_date"] = pd.to_datetime(df["maturity_date"])
+    return df
 
 
 def load_borrowers_data():

@@ -6,8 +6,10 @@ from src.charts import (
     create_loan_product_chart,
     create_delinquency_chart,
     create_npa_by_region_chart,
+    create_loan_origination_trend_chart,
 )
 from src.filters import apply_filters
+from src.portfolio_analysis import create_product_risk_summary
 
 
 st.set_page_config(
@@ -26,20 +28,9 @@ region_options = sorted(loans_df["region"].dropna().unique().tolist())
 product_options = sorted(loans_df["product_type"].dropna().unique().tolist())
 status_options = sorted(loans_df["status"].dropna().unique().tolist())
 
-selected_regions = st.sidebar.multiselect(
-    "Select Region",
-    options=region_options,
-)
-
-selected_products = st.sidebar.multiselect(
-    "Select Product Type",
-    options=product_options,
-)
-
-selected_statuses = st.sidebar.multiselect(
-    "Select Loan Status",
-    options=status_options,
-)
+selected_regions = st.sidebar.multiselect("Select Region", options=region_options)
+selected_products = st.sidebar.multiselect("Select Product Type", options=product_options)
+selected_statuses = st.sidebar.multiselect("Select Loan Status", options=status_options)
 
 filtered_loans_df = apply_filters(
     loans_df,
@@ -82,21 +73,32 @@ with col7:
 with col8:
     st.metric("Average LGD", f"{kpis['average_lgd']:.2%}")
 
-st.subheader("Portfolio Charts")
+tab1, tab2 = st.tabs(["Dashboard Charts", "Portfolio Details"])
 
-fig_product = create_loan_product_chart(filtered_loans_df)
-fig_delinquency = create_delinquency_chart(filtered_loans_df)
-fig_npa_region = create_npa_by_region_chart(filtered_loans_df)
+with tab1:
+    st.subheader("Portfolio Charts")
 
-chart_col1, chart_col2 = st.columns(2)
+    fig_product = create_loan_product_chart(filtered_loans_df)
+    fig_delinquency = create_delinquency_chart(filtered_loans_df)
+    fig_npa_region = create_npa_by_region_chart(filtered_loans_df)
+    fig_trend = create_loan_origination_trend_chart(filtered_loans_df)
 
-with chart_col1:
-    st.plotly_chart(fig_product, use_container_width=True)
+    chart_col1, chart_col2 = st.columns(2)
 
-with chart_col2:
-    st.plotly_chart(fig_delinquency, use_container_width=True)
+    with chart_col1:
+        st.plotly_chart(fig_product, use_container_width=True)
 
-st.plotly_chart(fig_npa_region, use_container_width=True)
+    with chart_col2:
+        st.plotly_chart(fig_delinquency, use_container_width=True)
 
-st.subheader("Filtered Loan Records")
-st.dataframe(filtered_loans_df.head(20))
+    st.plotly_chart(fig_npa_region, use_container_width=True)
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+with tab2:
+    st.subheader("Risk Segmentation by Product")
+
+    product_summary_df = create_product_risk_summary(filtered_loans_df)
+    st.dataframe(product_summary_df, use_container_width=True)
+
+    st.subheader("Filtered Loan Records")
+    st.dataframe(filtered_loans_df.head(50), use_container_width=True)
