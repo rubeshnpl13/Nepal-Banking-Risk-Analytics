@@ -1,6 +1,6 @@
 import streamlit as st
 
-
+from src.model_data import create_default_model_dataset
 from src.data_loader import load_loans_data
 from src.kpi_calculations import calculate_portfolio_kpis
 from src.charts import (
@@ -38,7 +38,14 @@ st.write("Credit risk overview of the synthetic Nepal loan portfolio.")
 loans_df = load_loans_data()
 borrowers_df = load_borrowers_data()
 joined_df = create_joined_loan_borrower_data(loans_df, borrowers_df)
+model_df = create_default_model_dataset(joined_df)
+st.subheader("Default Model Dataset Preview")
+st.write(f"Model dataset shape: {model_df.shape}")
+st.dataframe(model_df.head(20), use_container_width=True)
 
+st.subheader("Default Target Distribution")
+st.write(model_df["defaulted_flag"].value_counts())
+st.write(model_df["defaulted_flag"].value_counts(normalize=True))
 # st.subheader("Join Debug")
 # st.write(joined_df.columns.tolist())
 # st.dataframe(joined_df.head(5), use_container_width=True)
