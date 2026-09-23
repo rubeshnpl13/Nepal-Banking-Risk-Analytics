@@ -229,3 +229,92 @@ def create_region_borrower_chart(borrowers_df):
     )
 
     return fig
+
+def create_npa_by_employment_chart(joined_df):
+    summary = (
+        joined_df.groupby("employment_type_borrower")
+        .agg(
+            total_loans=("loan_id", "count"),
+            npa_loans=("npa_flag", "sum"),
+        )
+        .reset_index()
+    )
+
+    summary["npa_ratio"] = summary["npa_loans"] / summary["total_loans"]
+
+    fig = px.bar(
+        summary.sort_values("npa_ratio", ascending=False),
+        x="employment_type_borrower",
+        y="npa_ratio",
+        color="employment_type_borrower",
+        text="npa_ratio",
+        title="NPA Ratio by Employment Type",
+    )
+
+    fig.update_traces(texttemplate="%{text:.2%}", textposition="outside")
+    fig.update_layout(
+        xaxis_title="Employment Type",
+        yaxis_title="NPA Ratio",
+        yaxis_tickformat=".0%",
+        showlegend=False,
+    )
+
+    return fig
+
+
+def create_expected_loss_by_borrower_region_chart(joined_df):
+    summary = (
+        joined_df.groupby("region_borrower")
+        .agg(
+            total_expected_loss_npr=("expected_loss_npr", "sum"),
+        )
+        .reset_index()
+    )
+
+    fig = px.bar(
+        summary.sort_values("total_expected_loss_npr", ascending=True),
+        x="total_expected_loss_npr",
+        y="region_borrower",
+        orientation="h",
+        color="region_borrower",
+        text="total_expected_loss_npr",
+        title="Expected Loss by Borrower Region",
+    )
+
+    fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+    fig.update_layout(
+        xaxis_title="Total Expected Loss (NPR)",
+        yaxis_title="Borrower Region",
+        showlegend=False,
+    )
+
+    return fig
+
+
+def create_average_pd_by_education_chart(joined_df):
+    summary = (
+        joined_df.groupby("education_level_borrower")
+        .agg(
+            average_pd=("pd", "mean"),
+        )
+        .reset_index()
+    )
+
+    fig = px.bar(
+        summary.sort_values("average_pd", ascending=False),
+        x="education_level_borrower",
+        y="average_pd",
+        color="education_level_borrower",
+        text="average_pd",
+        title="Average PD by Education Level",
+    )
+
+    fig.update_traces(texttemplate="%{text:.2%}", textposition="outside")
+    fig.update_layout(
+        xaxis_title="Education Level",
+        yaxis_title="Average PD",
+        yaxis_tickformat=".0%",
+        showlegend=False,
+    )
+
+    return fig

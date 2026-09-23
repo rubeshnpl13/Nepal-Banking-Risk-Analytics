@@ -10,7 +10,11 @@ from src.charts import (
     create_loan_origination_trend_chart,
     create_pd_lgd_scatter_chart,
     create_vintage_npa_chart,
+    create_npa_by_employment_chart,
+    create_expected_loss_by_borrower_region_chart,
+    create_average_pd_by_education_chart,
 )
+
 from src.data_loader import load_loans_data, load_borrowers_data
 from src.join_analysis import (
     create_joined_loan_borrower_data,
@@ -149,8 +153,38 @@ with tab2:
     st.subheader("Filtered Loan Records")
     st.dataframe(filtered_loans_df.head(50), use_container_width=True)
 
-#borrower-loan join analysis
+#borrower-loan join analysis this for table
+# st.subheader("Borrower-Loan Joined Analysis")
+#
+# joined_col1, joined_col2, joined_col3 = st.columns(3)
+#
+# with joined_col1:
+#     st.markdown("### NPA Ratio by Employment Type")
+#     st.dataframe(npa_ratio_by_employment_type(joined_df), use_container_width=True)
+#
+# with joined_col2:
+#     st.markdown("### Expected Loss by Borrower Region")
+#     st.dataframe(expected_loss_by_region(joined_df), use_container_width=True)
+#
+# with joined_col3:
+#     st.markdown("### Average PD by Education Level")
+#     st.dataframe(average_pd_by_education_level(joined_df), use_container_width=True)
+
+# borrower-loan join analysis for the chart as well as table
+
 st.subheader("Borrower-Loan Joined Analysis")
+
+joined_chart_col1, joined_chart_col2 = st.columns(2)
+
+with joined_chart_col1:
+    st.plotly_chart(create_npa_by_employment_chart(joined_df), use_container_width=True)
+
+with joined_chart_col2:
+    st.plotly_chart(create_expected_loss_by_borrower_region_chart(joined_df), use_container_width=True)
+
+st.plotly_chart(create_average_pd_by_education_chart(joined_df), use_container_width=True)
+
+st.subheader("Joined Analysis Tables")
 
 joined_col1, joined_col2, joined_col3 = st.columns(3)
 
