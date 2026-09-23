@@ -1,5 +1,6 @@
 import plotly.express as px
-
+import pandas as pd
+#import plotly.express as px
 
 def create_loan_product_chart(loans_df):
     product_counts = (
@@ -314,6 +315,99 @@ def create_average_pd_by_education_chart(joined_df):
         xaxis_title="Education Level",
         yaxis_title="Average PD",
         yaxis_tickformat=".0%",
+        showlegend=False,
+    )
+
+    return fig
+
+def create_model_comparison_chart(model_metrics, rf_metrics):
+    comparison_df = pd.DataFrame(
+        {
+            "Metric": ["Accuracy", "Precision", "Recall", "F1 Score", "ROC-AUC"],
+            "Logistic Regression": [
+                model_metrics["accuracy"],
+                model_metrics["precision"],
+                model_metrics["recall"],
+                model_metrics["f1_score"],
+                model_metrics["roc_auc"],
+            ],
+            "Random Forest": [
+                rf_metrics["accuracy"],
+                rf_metrics["precision"],
+                rf_metrics["recall"],
+                rf_metrics["f1_score"],
+                rf_metrics["roc_auc"],
+            ],
+        }
+    )
+
+    comparison_long = comparison_df.melt(
+        id_vars="Metric",
+        var_name="Model",
+        value_name="Score",
+    )
+
+    fig = px.bar(
+        comparison_long,
+        x="Metric",
+        y="Score",
+        color="Model",
+        barmode="group",
+        text="Score",
+        title="Model Comparison",
+    )
+
+    fig.update_traces(texttemplate="%{text:.3f}", textposition="outside")
+    fig.update_layout(yaxis_title="Score", xaxis_title="", yaxis_range=[0, 1])
+
+    return fig
+
+
+def create_probability_distribution_chart(prediction_df):
+    fig = px.histogram(
+        prediction_df,
+        x="predicted_probability",
+        nbins=30,
+        title="Predicted Default Probability Distribution",
+    )
+
+    fig.update_layout(
+        xaxis_title="Predicted Default Probability",
+        yaxis_title="Loan Count",
+    )
+
+    return fig
+
+
+def create_risk_band_distribution_chart(prediction_df):
+    risk_band_df = (
+        prediction_df["risk_band"]
+        .value_counts()
+        .reset_index()
+    )
+    risk_band_df.columns = ["risk_band", "count"]
+
+    band_order = ["Low", "Medium", "High"]
+    risk_band_df["risk_band"] = pd.Categorical(
+        risk_band_df["risk_band"],
+        categories=band_order,
+        ordered=True,
+    )
+    risk_band_df = risk_band_df.sort_values("risk_band")
+
+    fig = px.bar(
+        risk_band_df,
+        x="risk_band",
+        y="count",
+        color="risk_band",
+        text="count",
+        title="Risk Band Distribution",
+    )
+
+    fig.update_traces(textposition="outside")
+    fig.update_layout(
+        xaxis_title="Risk Band",
+        yaxis_title="Loan Count",
         showlegend=False,
     )
 

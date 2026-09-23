@@ -147,6 +147,19 @@ def get_high_risk_predictions(prediction_df, top_n=20):
 
     return high_risk_df
 
+def add_risk_band(prediction_df):
+    df = prediction_df.copy()
+
+    def classify_risk(prob):
+        if prob >= 0.50:
+            return "High"
+        elif prob >= 0.20:
+            return "Medium"
+        else:
+            return "Low"
+
+    df["risk_band"] = df["predicted_probability"].apply(classify_risk)
+    return df
 
 def train_default_logistic_regression(model_df):
     feature_columns = [
