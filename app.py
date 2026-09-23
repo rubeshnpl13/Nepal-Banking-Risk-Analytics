@@ -123,10 +123,24 @@ with col8:
     st.metric("Average LGD", f"{kpis['average_lgd']:.2%}")
 
 # =========================
-# Portfolio Tabs
+# Model Training
 # =========================
-tab1, tab2 = st.tabs(["Dashboard Charts", "Portfolio Details"])
+model, model_metrics, prediction_df = train_default_logistic_regression(model_df)
+prediction_df = add_risk_band(prediction_df)
+importance_df = get_logistic_regression_feature_importance(model)
+high_risk_df = get_high_risk_predictions(prediction_df, top_n=20)
+rf_model, rf_metrics = train_default_random_forest(model_df)
 
+# =========================
+# Tabs
+# =========================
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["Dashboard Charts", "Portfolio Details", "Borrower Analysis", "Default Prediction"]
+)
+
+# =========================
+# Tab 1: Dashboard Charts
+# =========================
 with tab1:
     st.subheader("Portfolio Charts")
 
@@ -159,9 +173,11 @@ with tab1:
         with risk_col2:
             st.plotly_chart(fig_vintage, use_container_width=True)
 
+# =========================
+# Tab 2: Portfolio Details
+# =========================
 with tab2:
     st.subheader("Risk Segmentation by Product")
-
     product_summary_df = create_product_risk_summary(filtered_loans_df)
     st.dataframe(product_summary_df, use_container_width=True)
 
@@ -169,93 +185,92 @@ with tab2:
     st.dataframe(filtered_loans_df.head(50), use_container_width=True)
 
 # =========================
-# Borrower-Loan Joined Analysis
+# Tab 3: Borrower Analysis
 # =========================
-st.subheader("Borrower-Loan Joined Analysis")
+with tab3:
+    st.subheader("Borrower-Loan Joined Analysis")
 
-joined_chart_col1, joined_chart_col2 = st.columns(2)
+    joined_chart_col1, joined_chart_col2 = st.columns(2)
 
-with joined_chart_col1:
-    st.plotly_chart(create_npa_by_employment_chart(joined_df), use_container_width=True)
+    with joined_chart_col1:
+        st.plotly_chart(create_npa_by_employment_chart(joined_df), use_container_width=True)
 
-with joined_chart_col2:
-    st.plotly_chart(create_expected_loss_by_borrower_region_chart(joined_df), use_container_width=True)
+    with joined_chart_col2:
+        st.plotly_chart(create_expected_loss_by_borrower_region_chart(joined_df), use_container_width=True)
 
-st.plotly_chart(create_average_pd_by_education_chart(joined_df), use_container_width=True)
+    st.plotly_chart(create_average_pd_by_education_chart(joined_df), use_container_width=True)
 
-with st.expander("Joined Analysis Tables", expanded=False):
-    joined_col1, joined_col2, joined_col3 = st.columns(3)
+    with st.expander("Joined Analysis Tables", expanded=False):
+        joined_col1, joined_col2, joined_col3 = st.columns(3)
 
-    with joined_col1:
-        st.markdown("### NPA Ratio by Employment Type")
-        st.dataframe(npa_ratio_by_employment_type(joined_df), use_container_width=True)
+        with joined_col1:
+            st.markdown("### NPA Ratio by Employment Type")
+            st.dataframe(npa_ratio_by_employment_type(joined_df), use_container_width=True)
 
-    with joined_col2:
-        st.markdown("### Expected Loss by Borrower Region")
-        st.dataframe(expected_loss_by_region(joined_df), use_container_width=True)
+        with joined_col2:
+            st.markdown("### Expected Loss by Borrower Region")
+            st.dataframe(expected_loss_by_region(joined_df), use_container_width=True)
 
-    with joined_col3:
-        st.markdown("### Average PD by Education Level")
-        st.dataframe(average_pd_by_education_level(joined_df), use_container_width=True)
+        with joined_col3:
+            st.markdown("### Average PD by Education Level")
+            st.dataframe(average_pd_by_education_level(joined_df), use_container_width=True)
 
 # =========================
-# Default Prediction Models
+# Tab 4: Default Prediction
 # =========================
-model, model_metrics, prediction_df = train_default_logistic_regression(model_df)
-prediction_df = add_risk_band(prediction_df)
-importance_df = get_logistic_regression_feature_importance(model)
-high_risk_df = get_high_risk_predictions(prediction_df, top_n=20)
-rf_model, rf_metrics = train_default_random_forest(model_df)
+with tab4:
+    st.subheader("Default Prediction Model Performance")
 
-st.subheader("Default Prediction Models")
+    metric_col1, metric_col2, metric_col3, metric_col4, metric_col5 = st.columns(5)
 
-metric_col1, metric_col2, metric_col3, metric_col4, metric_col5 = st.columns(5)
+    with metric_col1:
+        st.metric("Accuracy", f"{model_metrics['accuracy']:.3f}")
 
-with metric_col1:
-    st.metric("Accuracy", f"{model_metrics['accuracy']:.3f}")
+    with metric_col2:
+        st.metric("Precision", f"{model_metrics['precision']:.3f}")
 
-with metric_col2:
-    st.metric("Precision", f"{model_metrics['precision']:.3f}")
+    with metric_col3:
+        st.metric("Recall", f"{model_metrics['recall']:.3f}")
 
-with metric_col3:
-    st.metric("Recall", f"{model_metrics['recall']:.3f}")
+    with metric_col4:
+        st.metric("F1 Score", f"{model_metrics['f1_score']:.3f}")
 
-with metric_col4:
-    st.metric("F1 Score", f"{model_metrics['f1_score']:.3f}")
+    with metric_col5:
+        st.metric("ROC-AUC", f"{model_metrics['roc_auc']:.3f}")
 
-with metric_col5:
-    st.metric("ROC-AUC", f"{model_metrics['roc_auc']:.3f}")
-
-st.plotly_chart(
-    create_model_comparison_chart(model_metrics, rf_metrics),
-    use_container_width=True,
-)
-
-risk_chart_col1, risk_chart_col2 = st.columns(2)
-
-with risk_chart_col1:
+    st.subheader("Model Comparison")
     st.plotly_chart(
-        create_probability_distribution_chart(prediction_df),
+        create_model_comparison_chart(model_metrics, rf_metrics),
         use_container_width=True,
     )
 
-with risk_chart_col2:
-    st.plotly_chart(
-        create_risk_band_distribution_chart(prediction_df),
-        use_container_width=True,
-    )
+    st.subheader("Risk Scoring")
 
-with st.expander("Model Tables", expanded=False):
-    st.markdown("### Confusion Matrix")
-    confusion_df = pd.DataFrame(
-        model_metrics["confusion_matrix"],
-        index=["Actual 0", "Actual 1"],
-        columns=["Predicted 0", "Predicted 1"],
-    )
-    st.dataframe(confusion_df, use_container_width=True)
+    risk_chart_col1, risk_chart_col2 = st.columns(2)
 
-    st.markdown("### Top Logistic Regression Features")
-    st.dataframe(importance_df.head(20), use_container_width=True)
+    with risk_chart_col1:
+        st.plotly_chart(
+            create_probability_distribution_chart(prediction_df),
+            use_container_width=True,
+        )
 
-    st.markdown("### Top High-Risk Predicted Loans")
-    st.dataframe(high_risk_df, use_container_width=True)
+    with risk_chart_col2:
+        st.plotly_chart(
+            create_risk_band_distribution_chart(prediction_df),
+            use_container_width=True,
+        )
+
+    with st.expander("Model Tables", expanded=False):
+        st.markdown("### Confusion Matrix")
+        confusion_df = pd.DataFrame(
+            model_metrics["confusion_matrix"],
+            index=["Actual 0", "Actual 1"],
+            columns=["Predicted 0", "Predicted 1"],
+        )
+        st.dataframe(confusion_df, use_container_width=True)
+
+        st.markdown("### Top Logistic Regression Features")
+        st.dataframe(importance_df.head(20), use_container_width=True)
+
+        st.markdown("### Top High-Risk Predicted Loans")
+        st.dataframe(high_risk_df, use_container_width=True)
