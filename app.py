@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 from src.data_loader import load_loans_data
 from src.kpi_calculations import calculate_portfolio_kpis
 from src.charts import (
@@ -10,6 +11,14 @@ from src.charts import (
     create_pd_lgd_scatter_chart,
     create_vintage_npa_chart,
 )
+from src.data_loader import load_loans_data, load_borrowers_data
+from src.join_analysis import (
+    create_joined_loan_borrower_data,
+    npa_ratio_by_employment_type,
+    expected_loss_by_region,
+    average_pd_by_education_level,
+)
+
 from src.filters import apply_filters
 from src.portfolio_analysis import create_product_risk_summary
 from src.export_utils import convert_df_to_csv
@@ -23,6 +32,12 @@ st.title("Nepal Banking Risk Analytics Dashboard")
 st.write("Credit risk overview of the synthetic Nepal loan portfolio.")
 
 loans_df = load_loans_data()
+borrowers_df = load_borrowers_data()
+joined_df = create_joined_loan_borrower_data(loans_df, borrowers_df)
+
+# st.subheader("Join Debug")
+# st.write(joined_df.columns.tolist())
+# st.dataframe(joined_df.head(5), use_container_width=True)
 
 st.sidebar.header("Portfolio Filters")
 
@@ -133,3 +148,20 @@ with tab2:
 
     st.subheader("Filtered Loan Records")
     st.dataframe(filtered_loans_df.head(50), use_container_width=True)
+
+#borrower-loan join analysis
+st.subheader("Borrower-Loan Joined Analysis")
+
+joined_col1, joined_col2, joined_col3 = st.columns(3)
+
+with joined_col1:
+    st.markdown("### NPA Ratio by Employment Type")
+    st.dataframe(npa_ratio_by_employment_type(joined_df), use_container_width=True)
+
+with joined_col2:
+    st.markdown("### Expected Loss by Borrower Region")
+    st.dataframe(expected_loss_by_region(joined_df), use_container_width=True)
+
+with joined_col3:
+    st.markdown("### Average PD by Education Level")
+    st.dataframe(average_pd_by_education_level(joined_df), use_container_width=True)
