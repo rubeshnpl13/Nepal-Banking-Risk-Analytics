@@ -1,5 +1,6 @@
 import streamlit as st
-
+import pandas as pd
+from src.default_model import train_default_logistic_regression
 from src.model_data import create_default_model_dataset
 from src.data_loader import load_loans_data
 from src.kpi_calculations import calculate_portfolio_kpis
@@ -13,6 +14,12 @@ from src.charts import (
     create_npa_by_employment_chart,
     create_expected_loss_by_borrower_region_chart,
     create_average_pd_by_education_chart,
+)
+from src.default_model import (
+    train_default_logistic_regression,
+    get_logistic_regression_feature_importance,
+    get_high_risk_predictions,
+    train_default_random_forest,
 )
 
 from src.data_loader import load_loans_data, load_borrowers_data
@@ -46,9 +53,75 @@ st.dataframe(model_df.head(20), use_container_width=True)
 st.subheader("Default Target Distribution")
 st.write(model_df["defaulted_flag"].value_counts())
 st.write(model_df["defaulted_flag"].value_counts(normalize=True))
+
+# Prediction Model Performance
+model, model_metrics, prediction_df = train_default_logistic_regression(model_df)
+importance_df = get_logistic_regression_feature_importance(model)
+high_risk_df = get_high_risk_predictions(prediction_df, top_n=20)
+rf_model, rf_metrics = train_default_random_forest(model_df)
+
+st.subheader("Default Prediction Model Performance")
+
+metric_col1, metric_col2, metric_col3, metric_col4, metric_col5 = st.columns(5)
+
+with metric_col1:
+    st.metric("Accuracy", f"{model_metrics['accuracy']:.3f}")
+
+with metric_col2:
+    st.metric("Precision", f"{model_metrics['precision']:.3f}")
+
+with metric_col3:
+    st.metric("Recall", f"{model_metrics['recall']:.3f}")
+
+with metric_col4:
+    st.metric("F1 Score", f"{model_metrics['f1_score']:.3f}")
+
+with metric_col5:
+    st.metric("ROC-AUC", f"{model_metrics['roc_auc']:.3f}")
+
+st.subheader("Prediction Preview")
+st.dataframe(prediction_df.head(20), use_container_width=True)
+
+st.subheader("Confusion Matrix")
+st.write(model_metrics["confusion_matrix"])
+
+st.subheader("Top Logistic Regression Features")
+st.dataframe(importance_df.head(20), use_container_width=True)
+
+st.subheader("Top High-Risk Predicted Loans")
+st.dataframe(high_risk_df, use_container_width=True)
+
 # st.subheader("Join Debug")
 # st.write(joined_df.columns.tolist())
 # st.dataframe(joined_df.head(5), use_container_width=True)
+
+#Logistic regression side-by-side comparison
+st.subheader("Model Comparison")
+
+comparison_df = {
+    "Metric": ["Accuracy", "Precision", "Recall", "F1 Score", "ROC-AUC"],
+    "Logistic Regression": [
+        model_metrics["accuracy"],
+        model_metrics["precision"],
+        model_metrics["recall"],
+        model_metrics["f1_score"],
+        model_metrics["roc_auc"],
+    ],
+    "Random Forest": [
+        rf_metrics["accuracy"],
+        rf_metrics["precision"],
+        rf_metrics["recall"],
+        rf_metrics["f1_score"],
+        rf_metrics["roc_auc"],
+    ],
+}
+
+
+comparison_df = pd.DataFrame(comparison_df)
+
+st.dataframe(comparison_df, use_container_width=True)
+
+
 
 st.sidebar.header("Portfolio Filters")
 
@@ -206,3 +279,4 @@ with joined_col2:
 with joined_col3:
     st.markdown("### Average PD by Education Level")
     st.dataframe(average_pd_by_education_level(joined_df), use_container_width=True)
+
